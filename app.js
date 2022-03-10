@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const cors = require("cors")
 const password = process.env.DB_PASSWORD
 const username = process.env.DB_USER
 const db = process.env.DB_NAME
@@ -25,6 +26,8 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     next();
   });
+
+app.use(cors())
 
 app.use(bodyParser.json());
 

@@ -15,7 +15,21 @@ exports.createThing = (req, res, next) => {
 
 
 exports.modifyThing = (req, res, next) => {
-    const thingObject = req.file ?
+  Thing.findOne({ _id: req.params.id })
+  .then(thing => {
+    if (!thing) {
+      res.status(404).json({
+        error: new Error('No such Thing!')
+      });
+    }
+    if (thing.userId !== req.auth.userId) {
+      res.status(403).json({
+        error: new Error('Unauthorized request!')
+      });
+    }
+    const filename = thing.imageUrl.split('/images/')[1];
+    fs.unlink(`images/${filename}`, () => {
+      const thingObject = req.file ?
       {
         ...JSON.parse(req.body.sauce),
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
@@ -23,12 +37,26 @@ exports.modifyThing = (req, res, next) => {
     Thing.updateOne({ _id: req.params.id }, { ...thingObject, _id: req.params.id })
       .then(() => res.status(200).json({ message: 'Objet modifié !'}))
       .catch(error => res.status(400).json({ error }));
+
+    });
+  })
+  .catch(error => res.status(500).json({ error }));
   };
 
 
   exports.deleteThing = (req, res, next) => {
     Thing.findOne({ _id: req.params.id })
       .then(thing => {
+        if (!thing) {
+          res.status(404).json({
+            error: new Error('No such Thing!')
+          });
+        }
+        if (thing.userId !== req.auth.userId) {
+          res.status(403).json({
+            error: new Error('Unauthorized request!')
+          });
+        }
         const filename = thing.imageUrl.split('/images/')[1];
         fs.unlink(`images/${filename}`, () => {
           Thing.deleteOne({ _id: req.params.id })

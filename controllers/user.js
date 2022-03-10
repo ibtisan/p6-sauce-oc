@@ -5,6 +5,10 @@ const token = process.env.JWT_PASSWORD
 const User = require('./../models/User');
 
 exports.signup = (req, res, next) => {
+  const testEmail = isEmailInvalid(req.body.email);
+  if (testEmail) {
+    return res.status(403).json({ error: 'Email invalid,Veuillez saisir un email valid !' })
+  } else {
     bcrypt.hash(req.body.password, 10)
     .then(hash => {
       const user = new User({
@@ -16,9 +20,23 @@ exports.signup = (req, res, next) => {
         .catch(error => res.status(400).json({ error }));
     })
     .catch(error => res.status(500).json({ error }));
+  }  
 };
 
+function isEmailInvalid(email) {
+  const regex = /^[a-zA-Z0-9.-_]+[@]{1}[a-zA-Z0-9.-_]+[.]{1}[a-z]{2,10}$/
+  if (regex.test(email) === false) {
+      return true
+  }
+  return false
+  }
+
+
 exports.login = (req, res, next) => {
+  const testEmail = isEmailInvalid(req.body.email);
+  if (testEmail) {
+    return res.status(403).json({ error: 'Email invalid,Veuillez saisir un email valid !' })
+  } else {
     User.findOne({ email: req.body.email })
       .then(user => {
         if (!user) {
@@ -33,7 +51,7 @@ exports.login = (req, res, next) => {
               userId: user._id,
               token: jwt.sign(
                 { userId: user._id },
-                'RANDOM_TOKEN_SECRET',
+                token,
                 { expiresIn: '24h' }
               )
             });
@@ -41,4 +59,5 @@ exports.login = (req, res, next) => {
           .catch(error => res.status(500).json({ error }));
       })
       .catch(error => res.status(500).json({ error }));
-  };
+  }
+};
